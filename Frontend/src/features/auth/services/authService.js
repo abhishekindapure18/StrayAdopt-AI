@@ -1,7 +1,12 @@
 import axios from "axios";
 
+// const api = axios.create({
+//   baseURL: "https://strayadopt.onrender.com",
+//   withCredentials: true,
+// });
+
 const api = axios.create({
-  baseURL: "https://strayadopt.onrender.com",
+  baseURL: "http://localhost:8000",
   withCredentials: true,
 });
 
