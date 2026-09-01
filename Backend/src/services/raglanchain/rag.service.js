@@ -16,9 +16,7 @@ async function answerUserQuery(query) {
     const route = routing.route;
     const webNeeded = routing.webNeeded;
 
-    console.log("Query route:", route);
-    console.log("Web needed:", webNeeded);
-
+    
 
     // ==============================
     // 2. RETRIEVE FROM MONGODB
@@ -29,14 +27,14 @@ async function answerUserQuery(query) {
 
     if (route === "POSTS" || route === "BOTH") {
 
-        console.log("Searching adoption posts...");
+       
 
         posts = await retrievePosts(query);
     }
 
     if (route === "PET_KNOWLEDGE" || route === "BOTH") {
 
-        console.log("Searching pet-care knowledge...");
+       
 
         knowledge = await searchKnowledge(query);
         
