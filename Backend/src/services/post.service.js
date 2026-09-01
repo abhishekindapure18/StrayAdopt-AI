@@ -1,5 +1,7 @@
 const cloudinary = require("../config/cloudinary");
 const postModel = require("../models/post.model");
+const { generateEmbedding } = require("./embedding.service");
+
 
 function uploadImageToCloudinary(fileBuffer){
     return new Promise ((resolve, reject)=>{
@@ -32,14 +34,25 @@ async function createPost({postBy , description , location , files}){
         throw error ; 
     }
 
+
     const uploadPromises = files.map((file)=>uploadImageToCloudinary(file.buffer))
     const imageUrls = await Promise.all(uploadPromises);
+
+            const textToEmbed = `
+            Description: ${description}
+            Location: ${location}
+            Status: available
+        `.trim();
+
+        const embedding = await generateEmbedding(textToEmbed);
+
 
     const post = await postModel.create({
         postBy,
         images : imageUrls,
         description,
-        location
+        location,
+        embedding
     });
 
     return post ; 
@@ -189,7 +202,6 @@ async function deletePost (postId , userId){
     return true ; 
 
 }
-
 
 
 module.exports = { createPost,

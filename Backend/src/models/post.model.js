@@ -31,6 +31,10 @@ const postSchema = new mongoose.Schema({
         type: String,
         enum: ["available", "adopted"],
         default: "available",
+    },
+    embedding: {
+        type: [Number],
+        default: undefined,
     }
 },
 {timestamps:true});

@@ -1,7 +1,7 @@
 const { ChatGoogleGenerativeAI } = require("@langchain/google-genai");
 
 const routerModel = new ChatGoogleGenerativeAI({
-    model: "gemini-3.6-flash",
+    model: "gemini-3.5-flash-lite",
     temperature: 0,
 });
 
@@ -10,70 +10,73 @@ async function routeQuery(query) {
     const prompt = `
 You are the query router for StrayAdopt.
 
-Your job is to decide which information sources are needed
+Decide which internal information sources are needed
 to answer the user's COMPLETE question.
 
-AVAILABLE SOURCES:
+AVAILABLE INTERNAL SOURCES:
 
 POSTS:
-Contains real adoption listings from StrayAdopt.
-Use POSTS when the user asks about:
-- finding an animal
+Real adoption listings from StrayAdopt.
+Use when the user asks about:
+- finding animals
 - available animals
 - adoption listings
-- a specific animal listing
 - animals in a location
-- puppies, kittens, dogs, cats available for adoption
-- information about an animal mentioned in a StrayAdopt listing
+- a specific adoption listing
 
 PET_KNOWLEDGE:
-Contains trusted pet-care documents.
-Use PET_KNOWLEDGE when the user asks about:
+Trusted pet-care documents.
+Use for:
 - feeding
 - health
 - vaccinations
 - training
 - grooming
 - behaviour
-- caring for puppies
-- caring for kittens
-- caring for cats or dogs
+- caring for puppies, kittens, cats or dogs
 - general pet ownership
 
+A query can require BOTH.
+
+WEB SEARCH:
+Use web search when the question requires:
+- current or latest information
+- recent recommendations or guidelines
+- information that may have changed recently
+- current news, laws, regulations, prices or availability
+- information not likely to be available in the internal sources
+
 IMPORTANT:
+A query may need internal sources AND web search.
 
-A query can require BOTH sources.
-
-Use BOTH when the user:
-1. Refers to a specific animal/adoption listing AND
-2. Asks a pet-care or general animal-care question.
-
-For example:
-
-"I found a puppy at ABES College. How should I take care of it?"
-→ BOTH
-
-"I found a kitten on StrayAdopt. What should I feed it?"
-→ BOTH
-
-"Is there a puppy available in Delhi and how should I care for it?"
-→ BOTH
+Examples:
 
 "Find me a puppy in Delhi"
-→ POSTS
+→ POSTS, webNeeded=false
 
 "How should I take care of a one month old puppy?"
-→ PET_KNOWLEDGE
+→ PET_KNOWLEDGE, webNeeded=false
 
-"What should I feed my cat?"
-→ PET_KNOWLEDGE
+"I found a puppy at ABES College. How should I take care of it?"
+→ BOTH, webNeeded=false
 
-Return ONLY ONE of:
+"I found a puppy at ABES College. What are the latest vaccination recommendations?"
+→ BOTH, webNeeded=true
 
-POSTS
-PET_KNOWLEDGE
-BOTH
+"What are the latest vaccination recommendations for puppies?"
+→ PET_KNOWLEDGE, webNeeded=true
 
+"Find me a puppy in Delhi and tell me the latest adoption rules"
+→ POSTS, webNeeded=true
+
+Return ONLY valid JSON in exactly this format:
+
+{
+  "route": "POSTS" | "PET_KNOWLEDGE" | "BOTH",
+  "webNeeded": true | false
+}
+
+Do not return markdown.
 Do not return explanations.
 
 User query:
@@ -82,16 +85,27 @@ ${query}
 
     const response = await routerModel.invoke(prompt);
 
-    const route = response.content
+    const text = response.content
         .toString()
-        .trim()
-        .toUpperCase();
+        .trim();
 
-    if (!["POSTS", "PET_KNOWLEDGE", "BOTH"].includes(route)) {
-        throw new Error(`Invalid router response: ${route}`);
+    let result;
+
+    try {
+        result = JSON.parse(text);
+    } catch (error) {
+        throw new Error(`Invalid router JSON: ${text}`);
     }
 
-    return route;
+    if (!["POSTS", "PET_KNOWLEDGE", "BOTH"].includes(result.route)) {
+        throw new Error(`Invalid route: ${result.route}`);
+    }
+
+    if (typeof result.webNeeded !== "boolean") {
+        throw new Error(`Invalid webNeeded value: ${result.webNeeded}`);
+    }
+
+    return result;
 }
 
 module.exports = {

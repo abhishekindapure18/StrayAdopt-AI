@@ -18,10 +18,13 @@ const authRouter = require('./src/routes/auth.routes');
 const postRouter = require('./src/routes/post.routes');
 const conversationRouter = require('./src/routes/conversation.routes')
 
+const ragSearchRouter = require("./src/routes/ragSearch.routes");
+
 /* use all routes here */
 
   app.use('/api/auth',authRouter);
   app.use('/api/posts/',postRouter);
   app.use('/api/conversations',conversationRouter)
   
+  app.use("/api", ragSearchRouter);
 module.exports = app ;
