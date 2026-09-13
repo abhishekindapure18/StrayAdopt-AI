@@ -1,7 +1,7 @@
 
 import Login from "./features/auth/pages/Login";
 import Register from "./features/auth/pages/Register";
-import {createBrowserRouter} from "react-router";
+import { createBrowserRouter } from "react-router-dom";
 import Layout from "./features/Components/Layout";
 import Home from "./features/home/pages/home";
 import Profile from "./features/profilePage/pages/profile";
@@ -15,6 +15,7 @@ import VerifyOtp from "./features/auth/pages/VerifyOtp";
 import ForgotPassword from "./features/auth/pages/ForgotPassword";
 import ResetPassword from "./features/auth/pages/ResetPassword";
 import Explore from "./features/Pages/ExploreAllPetsPage";
+import AIAssistant from "./features/aiservice/pages/AIAssistant";
 
 export const router = createBrowserRouter([
     {
@@ -55,7 +56,11 @@ export const router = createBrowserRouter([
                 element: <Protected><ChatPage /></Protected>
               },
               { path: "/about", 
-                element: <About /> }
+                element: <About /> },
+                {
+                  path: "/ai-assistant",
+                  element: <AIAssistant />
+                },
         ]
 
     },

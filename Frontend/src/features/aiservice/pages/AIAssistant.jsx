@@ -15,46 +15,81 @@ function TypingIndicator() {
 
 export default function AIAssistant() {
   const navigate = useNavigate();
-  const [messages, setMessages] = useState([]); // { role: "user" | "ai", text: string }
+
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+
   const endRef = useRef(null);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
+    endRef.current?.scrollIntoView({
+      behavior: "smooth",
+    });
   }, [messages, sending]);
 
   async function handleSend(e) {
     e?.preventDefault();
+
     const query = input.trim();
-    if (!query || sending) return;
+
+    if (!query || sending) {
+      return;
+    }
 
     setError("");
     setInput("");
-    setMessages((prev) => [...prev, { role: "user", text: query }]);
+
+    // Add user's message
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "user",
+        text: query,
+      },
+    ]);
+
     setSending(true);
 
     try {
-        const data = await ragSearch(query);
+      const data = await ragSearch(query);
 
-        const answer =
-          data?.data?.answer || "I couldn't find an answer to that.";
-        
-          const pets = (data?.data?.sources?.posts || []).filter(
-            (post) => post._id && post.postBy?._id
-          );
-        
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "ai",
-            text: answer,
-            pets: pets
-          }
-        ]);
+      // Debug: check complete backend response
+      console.log("FULL RAG RESPONSE:", data);
+
+      const answer =
+        data?.data?.answer ||
+        "I couldn't find an answer to that.";
+
+      // Get adoption posts from backend
+      const posts = data?.data?.sources?.posts || [];
+
+      console.log("RAG POSTS:", posts);
+
+      // Only require _id for rendering
+      const pets = posts.filter(
+        (post) => post?._id
+      );
+
+      console.log("PETS TO RENDER:", pets);
+
+      // Add AI response
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "ai",
+          text: answer,
+          pets: pets,
+        },
+      ]);
     } catch (err) {
-      setError(err?.response?.data?.message || "Something went wrong. Please try again.");
+      console.error("RAG SEARCH ERROR:", err);
+
+      setError(
+        err?.response?.data?.message ||
+          "Something went wrong. Please try again."
+      );
     } finally {
       setSending(false);
     }
@@ -70,77 +105,155 @@ export default function AIAssistant() {
   return (
     <div className="min-h-screen bg-cream flex justify-center px-4 py-8">
       <div className="w-full max-w-2xl h-[calc(100vh-4rem)] bg-white border border-border-brand rounded-3xl shadow-sm flex flex-col overflow-hidden">
-        {/* Header */}
+
+        {/* ================= HEADER ================= */}
+
         <div className="flex items-center gap-3 p-5 border-b border-border-brand">
+
           <button
             onClick={() => navigate(-1)}
             className="w-9 h-9 rounded-full flex items-center justify-center text-text-mid hover:bg-warm transition-colors"
             aria-label="Go back"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M15 18l-6-6 6-6" />
             </svg>
           </button>
+
           <div className="w-9 h-9 rounded-full bg-rust flex items-center justify-center text-white text-sm font-semibold">
             AI
           </div>
-          <h1 className="font-display text-xl font-semibold text-bark-dark">StrayAdopt AI</h1>
+
+          <h1 className="font-display text-xl font-semibold text-bark-dark">
+            StrayAdopt AI
+          </h1>
+
         </div>
 
-        {/* Messages */}
+        {/* ================= MESSAGES ================= */}
+
         <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-cream/50">
+
           {messages.length === 0 ? (
+
             <div className="h-full flex flex-col items-center justify-center text-center px-6">
+
               <div className="w-14 h-14 rounded-full bg-rust/10 flex items-center justify-center mb-4">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C0572A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#C0572A"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-4 4 4 4 0 0 1-4-4V6a4 4 0 0 1 4-4Z" />
                   <path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
                 </svg>
+
               </div>
-              <p className="text-bark-dark font-medium mb-1">Ask me anything about StrayAdopt</p>
+
+              <p className="text-bark-dark font-medium mb-1">
+                Ask me anything about StrayAdopt
+              </p>
+
               <p className="text-text-light text-sm max-w-xs">
                 Pet care tips, adoption guidance, or help finding a stray near you — I'm here to help.
               </p>
+
             </div>
+
           ) : (
+
             messages.map((msg, i) => (
-                <div key={i} className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}>
-                  <div
-                    className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-[15px] leading-relaxed whitespace-pre-wrap ${
-                      msg.role === "user"
-                        ? "bg-rust text-white rounded-br-sm"
-                        : "bg-white text-text-main border border-border-brand rounded-bl-sm"
-                    }`}
-                  >
-                    {msg.text}
-                  </div>
-              
-                  {msg.role === "ai" && msg.pets?.length > 0 && (
+
+              <div
+                key={i}
+                className={`flex flex-col ${
+                  msg.role === "user"
+                    ? "items-end"
+                    : "items-start"
+                }`}
+              >
+
+                {/* ================= MESSAGE ================= */}
+
+                <div
+                  className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-[15px] leading-relaxed whitespace-pre-wrap ${
+                    msg.role === "user"
+                      ? "bg-rust text-white rounded-br-sm"
+                      : "bg-white text-text-main border border-border-brand rounded-bl-sm"
+                  }`}
+                >
+                  {msg.text}
+                </div>
+
+                {/* ================= PET CARDS ================= */}
+
+                {msg.role === "ai" &&
+                  msg.pets &&
+                  msg.pets.length > 0 && (
+
                     <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-[90%] w-full">
+
                       {msg.pets.map((pet) => (
-                        <div key={pet.id} className="scale-[0.85] origin-top-left -mb-8">
+
+                        <div
+                          key={pet._id}
+                          className="scale-[0.85] origin-top-left -mb-8"
+                        >
                           <PetCard post={pet} />
                         </div>
+
                       ))}
+
                     </div>
+
                   )}
-                </div>
-              ))
+
+              </div>
+
+            ))
+
           )}
+
+          {/* ================= TYPING ================= */}
 
           {sending && <TypingIndicator />}
 
+          {/* ================= ERROR ================= */}
+
           {error && (
+
             <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 w-fit">
               {error}
             </p>
+
           )}
 
           <div ref={endRef} />
+
         </div>
 
-        {/* Input */}
-        <form onSubmit={handleSend} className="p-4 border-t border-border-brand flex gap-3">
+        {/* ================= INPUT ================= */}
+
+        <form
+          onSubmit={handleSend}
+          className="p-4 border-t border-border-brand flex gap-3"
+        >
+
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -149,6 +262,7 @@ export default function AIAssistant() {
             rows={1}
             className="flex-1 resize-none rounded-xl border border-border-brand px-4 py-3 text-[14px] outline-none focus:border-rust focus:ring-2 focus:ring-rust/20 transition-all max-h-32"
           />
+
           <button
             type="submit"
             disabled={!input.trim() || sending}
@@ -156,7 +270,9 @@ export default function AIAssistant() {
           >
             Send
           </button>
+
         </form>
+
       </div>
     </div>
   );

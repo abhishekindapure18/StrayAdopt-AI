@@ -178,7 +178,7 @@ ANSWER:
         sources: {
 
             posts: posts.map((doc) => ({
-                id: doc.metadata._id,
+                _id: doc.metadata._id,
                 description: doc.pageContent,
                 location: doc.metadata.location,
                 status: doc.metadata.status,
