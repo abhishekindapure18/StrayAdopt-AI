@@ -29,7 +29,7 @@ WORKDIR /app
 
 COPY Backend/package*.json ./
 
-RUN npm install --omit=dev
+RUN npm install --omit=dev --legacy-peer-deps
 
 COPY Backend/ .
 
