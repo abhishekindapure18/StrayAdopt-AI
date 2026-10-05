@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://strayadopt.onrender.com",
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000",
   withCredentials: true,
 });
 
@@ -24,6 +24,7 @@ export async function logout() {
   const response = await api.post("/api/auth/logout");
   return response.data;
 }
+
 export async function getMe() {
   const response = await api.get("/api/auth/me");
   return response.data;
