@@ -15,9 +15,23 @@ const {
 
 async function ingestPDF(filePath, category) {
 
-   
-    // 1. Load PDF
+    // 1. Prevent duplicate ingestion
 
+    const existingKnowledge = await Knowledge.findOne({
+        category,
+        source: filePath,
+    });
+
+    if (existingKnowledge) {
+        console.log(
+            `Knowledge already exists for "${category}". Skipping ingestion.`
+        );
+
+        return [];  
+    }
+
+
+    // 2. Load PDF
 
     const loader = new PDFLoader(filePath);
 
@@ -26,9 +40,7 @@ async function ingestPDF(filePath, category) {
     console.log(`Loaded ${documents.length} PDF pages`);
 
 
- 
-    // 2. Split into chunks
-    
+    // 3. Split into chunks
 
     const splitter =
         new RecursiveCharacterTextSplitter({
@@ -42,9 +54,7 @@ async function ingestPDF(filePath, category) {
     console.log(`Created ${chunks.length} chunks`);
 
 
-    
-    // 3. Generate embeddings
-   
+    // 4. Generate embeddings
 
     const knowledgeDocuments = [];
 
@@ -62,9 +72,7 @@ async function ingestPDF(filePath, category) {
             );
 
 
-       
-        // 4. Prepare MongoDB document
-        
+        // 5. Prepare MongoDB document
 
         knowledgeDocuments.push({
             content: chunk.pageContent,
@@ -82,9 +90,7 @@ async function ingestPDF(filePath, category) {
     }
 
 
-    
-    // 5. Save to MongoDB
-
+    // 6. Save to MongoDB
 
     await Knowledge.insertMany(
         knowledgeDocuments
