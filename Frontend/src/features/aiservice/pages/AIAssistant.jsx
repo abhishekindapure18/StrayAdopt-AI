@@ -65,7 +65,11 @@ export default function AIAssistant() {
       // Get adoption posts from backend
       const posts = data?.data?.sources?.posts || [];
 
+      // Get RAG knowledge sources from backend
+      const knowledge = data?.data?.sources?.knowledge || [];
+
       console.log("RAG POSTS:", posts);
+      console.log("RAG KNOWLEDGE SOURCES:", knowledge);
 
       // Only require _id for rendering
       const pets = posts.filter(
@@ -81,6 +85,7 @@ export default function AIAssistant() {
           role: "ai",
           text: answer,
           pets: pets,
+          knowledge: knowledge,
         },
       ]);
     } catch (err) {
@@ -222,6 +227,57 @@ export default function AIAssistant() {
                     </div>
 
                   )}
+
+                {/* ================= RAG SOURCES ================= */}
+
+                {msg.role === "ai" &&
+                msg.knowledge &&
+                msg.knowledge.length > 0 && (
+
+                  <details className="mt-3 max-w-[90%] w-full">
+                    
+                    <summary className="cursor-pointer text-sm font-medium text-text-mid hover:text-rust transition-colors">
+                      📚 Sources used ({msg.knowledge.length})
+                    </summary>
+
+                    <div className="mt-2 space-y-2">
+
+                      {msg.knowledge.map((source, index) => (
+
+                        <div
+                          key={index}
+                          className="bg-white border border-border-brand rounded-xl px-3 py-2"
+                        >
+
+                          <div className="flex items-center justify-between gap-3">
+
+                            <span className="text-sm font-medium text-bark-dark">
+                              Pet Care Guide
+                            </span>
+
+                            {source.pageNumber && (
+                              <span className="text-xs text-text-light">
+                                Page {source.pageNumber}
+                              </span>
+                            )}
+
+                          </div>
+
+                          {source.content && (
+                            <p className="mt-1 text-xs text-text-light line-clamp-2">
+                              {source.content}
+                            </p>
+                          )}
+
+                        </div>
+
+                      ))}
+
+                    </div>
+
+                  </details>
+
+                )}
 
               </div>
 
