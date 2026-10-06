@@ -24,13 +24,21 @@ export default function Explore() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+  const [location, setLocation] = useState("");
+  const [status, setStatus] = useState("");
 
   useEffect(() => {
     async function fetchPosts() {
       setLoading(true);
       setError("");
       try {
-        const data = await getAllPosts(page, 12);
+        const data = await getAllPosts(page, 12, {
+          search,
+          location,
+          status,
+        });
         setPosts(data.posts || []);
         setTotalPages(data.totalPages || 1);
       } catch (err) {
@@ -41,7 +49,21 @@ export default function Explore() {
     }
     fetchPosts();
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [page]);
+  }, [page, search, location, status]);
+
+function handleSearch(e) {
+  e.preventDefault();
+  setPage(1);
+  setSearch(searchInput);
+}
+
+function handleResetFilters() {
+  setSearchInput("");
+  setSearch("");
+  setLocation("");
+  setStatus("");
+  setPage(1);
+}
 
   return (
     <div className="min-h-screen bg-cream">
@@ -62,6 +84,64 @@ export default function Explore() {
             Available Pets
           </h1>
         </div>
+      </section>
+
+      {/* Filters */}
+      <section className="max-w-7xl mx-auto px-6 lg:px-10 pt-8">
+        <form
+          onSubmit={handleSearch}
+          className="bg-white border border-border-brand rounded-2xl p-5 shadow-sm"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Search pet description..."
+              className="rounded-xl border border-border-brand px-4 py-3 outline-none focus:border-rust focus:ring-2 focus:ring-rust/20"
+            />
+
+            <input
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Location..."
+              className="rounded-xl border border-border-brand px-4 py-3 outline-none focus:border-rust focus:ring-2 focus:ring-rust/20"
+            />
+
+            <select
+              value={status}
+              onChange={(e) => {
+                setStatus(e.target.value);
+                setPage(1);
+              }}
+              className="rounded-xl border border-border-brand px-4 py-3 outline-none focus:border-rust"
+            >
+              <option value="">All statuses</option>
+              <option value="available">Available</option>
+              <option value="adopted">Adopted</option>
+            </select>
+
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                className="flex-1 rounded-xl bg-rust hover:bg-rust-hover px-4 py-3 text-white font-medium transition-colors"
+              >
+                Search
+              </button>
+
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="rounded-xl border border-border-brand px-4 py-3 text-bark-dark hover:border-rust transition-colors"
+              >
+                Reset
+              </button>
+            </div>
+
+          </div>
+        </form>
       </section>
 
       {/* Grid */}

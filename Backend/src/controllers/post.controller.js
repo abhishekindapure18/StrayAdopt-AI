@@ -41,10 +41,24 @@ async function getAllPostsController(req, res) {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 12;
 
-        const result = await postService.getAllPosts({ page, limit });
+        const search = req.query.search || "";
+        const location = req.query.location || "";
+        const status = req.query.status || "";
+
+        const result = await postService.getAllPosts({
+            page,
+            limit,
+            search,
+            location,
+            status,
+        });
+
         return res.status(200).json(result);
     } catch (error) {
-        return res.status(500).json({ message: "Something went wrong", error: error.message });
+        return res.status(500).json({
+            message: "Something went wrong",
+            error: error.message,
+        });
     }
 }
 

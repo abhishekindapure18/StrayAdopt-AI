@@ -25,9 +25,30 @@ export async function getLatestPosts() {
 /**
  * Get all posts for Explore page
  */
-export async function getAllPosts(page = 1, limit = 12) {
+export async function getAllPosts(
+    page = 1,
+    limit = 12,
+    filters = {}
+) {
+    const params = new URLSearchParams({
+        page,
+        limit,
+    });
+
+    if (filters.search?.trim()) {
+        params.append("search", filters.search.trim());
+    }
+
+    if (filters.location?.trim()) {
+        params.append("location", filters.location.trim());
+    }
+
+    if (filters.status) {
+        params.append("status", filters.status);
+    }
+
     const response = await api.get(
-        `/api/posts/allPosts?page=${page}&limit=${limit}`
+        `/api/posts/allPosts?${params.toString()}`
     );
 
     return response.data;

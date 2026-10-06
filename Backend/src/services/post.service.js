@@ -67,17 +67,47 @@ async function getLatestPosts(limit = 6 ){
     return posts; 
 }
 
-async function getAllPosts({ page = 1, limit = 12 }) {
+async function getAllPosts({
+    page = 1,
+    limit = 12,
+    search = "",
+    location = "",
+    status = "",
+}) {
     const skip = (page - 1) * limit;
+
+    const filter = {};
+
+    // Search description
+    if (search.trim()) {
+        filter.description = {
+            $regex: search.trim(),
+            $options: "i",
+        };
+    }
+
+    // Search location
+    if (location.trim()) {
+        filter.location = {
+            $regex: location.trim(),
+            $options: "i",
+        };
+    }
+
+    // Filter adoption status
+    if (status && ["available", "adopted"].includes(status)) {
+        filter.status = status;
+    }
 
     const [posts, total] = await Promise.all([
         postModel
-            .find()
+            .find(filter)
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
             .populate("postBy", "username email"),
-        postModel.countDocuments(),
+
+        postModel.countDocuments(filter),
     ]);
 
     return {
